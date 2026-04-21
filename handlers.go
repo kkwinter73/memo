@@ -9,13 +9,22 @@ import (
 	"strconv"
 )
 
+// *MemoStoreをインターフェースに変える
+type Store interface {
+	Create(title, content string) *Memo
+	GetAll() []*Memo
+	Get(id int) (*Memo, error)
+	Update(id int, title string, content string) (*Memo, error)
+	Delete(id int) error
+}
+
 // MemoHandler はハンドラが必要とする依存を束ねる
 type MemoHandler struct {
-	store *MemoStore
+	store Store
 }
 
 // NewMemoHandler は MemoHandler を生成する
-func NewMemoHandler(store *MemoStore) *MemoHandler {
+func NewMemoHandler(store Store) *MemoHandler {
 	return &MemoHandler{store: store}
 }
 
