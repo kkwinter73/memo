@@ -21,7 +21,11 @@ func main() {
 	// サーバー起動
 	addr := ":8080"
 	log.Printf("listening on %s", addr)
-	if err := http.ListenAndServe(addr, mux); err != nil {
+	// if err := http.ListenAndServe(addr, mux); err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	if err := http.ListenAndServe(addr, loggingMiddleware(mux)); err != nil {
 		log.Fatal(err)
 	}
 }
