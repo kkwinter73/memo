@@ -16,6 +16,8 @@ type Store interface {
 	Get(id int) (*Memo, error)
 	Update(id int, title string, content string) (*Memo, error)
 	Delete(id int) error
+
+	Search(query string) []*Memo
 }
 
 // MemoHandler はハンドラが必要とする依存を束ねる
@@ -62,9 +64,20 @@ func (h *MemoHandler) Create(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, memo)
 }
 
-// List は GET /memos
+// List は GET /memos (検索クエリ ?q=... にも対応)
 func (h *MemoHandler) List(w http.ResponseWriter, r *http.Request) {
-	memos := h.store.GetAll()
+	// URLから "q" という名前のクエリパラメータを取得
+	query := r.URL.Query().Get("q")
+
+	var memos []*Memo
+	if query != "" {
+		// クエリがある場合は検索を実行
+		memos = h.store.Search(query)
+	} else {
+		// クエリがない場合は全件取得
+		memos = h.store.GetAll()
+	}
+
 	writeJSON(w, http.StatusOK, memos)
 }
 

@@ -3,6 +3,7 @@ package main
 
 import (
 	"errors"
+	"strings"
 	"sync"
 	"time"
 )
@@ -67,6 +68,7 @@ func (s *MemoStore) Create(title, content string) *Memo {
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
+
 	s.memos[s.nextID] = memo
 	s.nextID++
 	return memo //呼び出し側(ハンドラ)が「作ったメモ」を受け取ってJSONレスポンスに使う。マップに入れたのと同じポインタを返すので、呼び出し側もマップの中身と同じ実体を参照する
@@ -93,7 +95,7 @@ func (s *MemoStore) GetAll() []*Memo {
 
 // 特定のメモを返す
 func (s *MemoStore) Get(id int) (*Memo, error) {
-	//Goの定石。「値とエラーのペアを返す」のが基本形。成功時は (memo, nil)、
+	// Goの定石。「値とエラーのペアを返す」のが基本形。成功時は (memo, nil)、
 	// 失敗時は (nil, err)。C#の try-catch の代わりに、戻り値でエラーを伝えるのがGoの流儀。
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -142,4 +144,20 @@ func (s *MemoStore) Delete(id int) error {
 	// 組み込み関数（map,id）
 	delete(s.memos, id)
 	return nil
+}
+
+// Search はタイトルまたは内容に query が含まれるメモを返す
+func (s *MemoStore) Search(query string) []*Memo {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	var result []*Memo
+	for _, m := range s.memos {
+		// strings.Contains で指定した文字が含まれているかチェック
+		// Title または Content のどちらかに含まれていれば OK
+		if strings.Contains(m.Title, query) || strings.Contains(m.Content, query) {
+			result = append(result, m)
+		}
+	}
+	return result
 }
